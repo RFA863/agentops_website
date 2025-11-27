@@ -12,8 +12,9 @@ export default function DashboardLayout() {
   };
 
   const menuItems = [
+    // Pastikan path-nya '/dashboard' saja (yang akan merender WorkflowList)
+    { label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4 mr-2" />, path: '/dashboard' },
     { label: 'Create Workflow', icon: <PlusCircle className="w-4 h-4 mr-2" />, path: '/dashboard/create' },
-    // Anda bisa menambahkan menu "History" atau "All Workflows" nanti
   ];
 
   return (

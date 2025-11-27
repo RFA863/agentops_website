@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import WorkflowRun from './pages/WorkflowRun';
+import WorkflowList from './pages/WorkflowList';
 
 const queryClient = new QueryClient();
 
@@ -37,17 +38,18 @@ function App() {
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+
+          
           
           {/* Protected Dashboard Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/dashboard/create" replace />} /> 
+         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+            {/* GANTI INI: Jangan redirect ke create lagi */}
+            <Route index element={<WorkflowList />} /> 
+            
+            {/* Route lainnya tetap sama */}
             <Route path="create" element={<WorkflowBuilder />} />
             <Route path="run/:id" element={<WorkflowRun />} />
-          </Route>
+        </Route>
 
           {/* Catch all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -73,7 +73,8 @@ export default function WorkflowBuilder() {
   };
 
   const handleFinish = () => {
-    navigate(`/workflows/run/${workflowId}`);
+    // Code Baru (Sesuai struktur /dashboard/run/:id)
+    navigate(`/dashboard/run/${workflowId}`);
   };
 
   return (
