@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DashboardLayout from './layouts/DashboardLayout';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import WorkflowRun from './pages/WorkflowRun';
 
@@ -10,7 +12,19 @@ const queryClient = new QueryClient();
 // Komponen Proteksi Route
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
+  // Cek token valid sederhana
+  if (!token || token === 'undefined' || token === 'null') {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+// Komponen Public Route (Redirect ke dashboard jika sudah login)
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (token && token !== 'undefined' && token !== 'null') {
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 };
 
@@ -19,19 +33,24 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          {/* Public Routes */}
+          <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           
-          <Route path="/" element={
+          {/* Protected Dashboard Routes */}
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
           }>
-            {/* Dashboard Default: Langsung ke create workflow agar cepat dites */}
-            <Route index element={<Navigate to="/workflows/create" replace />} /> 
-            
-            <Route path="workflows/create" element={<WorkflowBuilder />} />
-            <Route path="workflows/run/:id" element={<WorkflowRun />} />
+            <Route index element={<Navigate to="/dashboard/create" replace />} /> 
+            <Route path="create" element={<WorkflowBuilder />} />
+            <Route path="run/:id" element={<WorkflowRun />} />
           </Route>
+
+          {/* Catch all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

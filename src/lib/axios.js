@@ -1,25 +1,31 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000', // Sesuaikan port backend
+  baseURL: import.meta.env.VITE_API_URL
 });
 
-// Interceptor untuk menyisipkan Token
+// Interceptor Request: Sisipkan Token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = token; // Sesuai middleware backend Anda
+  if (token && token !== 'undefined' && token !== 'null') {
+    config.headers.Authorization = token;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
-// Interceptor untuk handle error 401 (Unauthorized)
+// Interceptor Response: Handle 401
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Jika 401 Unauthorized dan bukan sedang di halaman login/register
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith('/login') && !currentPath.startsWith('/register') && currentPath !== '/') {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
