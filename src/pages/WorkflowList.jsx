@@ -1,21 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-// Import komponen feedback
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
 import { Plus, Play, ArrowRight, Calendar, Pencil, Trash2, Loader2, AlertCircle } from "lucide-react";
 
 export default function WorkflowList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch Data
+
   const { data: workflows, isLoading, isError, error } = useQuery({
     queryKey: ['workflows'],
     queryFn: async () => {
@@ -24,17 +26,16 @@ export default function WorkflowList() {
     }
   });
 
-  // Mutation Delete
+ 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
       await api.delete(`/workflows/${id}`);
     },
     onSuccess: () => {
-      toast.success("Workflow deleted successfully"); // Toast Sukses
+      toast.success("Workflow deleted successfully"); 
       queryClient.invalidateQueries(['workflows']);
     },
     onError: (err) => {
-      // Toast Gagal dengan pesan dari backend
       toast.error(err.response?.data?.message || "Failed to delete workflow");
     }
   });
@@ -51,7 +52,7 @@ export default function WorkflowList() {
     </div>
   );
 
-  // TAMPILKAN ALERT JIKA GAGAL LOAD DATA
+  
   if (isError) return (
     <Alert variant="destructive">
       <AlertCircle className="h-4 w-4" />
@@ -64,7 +65,7 @@ export default function WorkflowList() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header */}
+    
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">My Workflows</h2>
@@ -77,7 +78,7 @@ export default function WorkflowList() {
         </Link>
       </div>
 
-      {/* Empty State */}
+    
       {workflows?.length === 0 && (
         <div className="text-center py-20 border border-dashed border-slate-300 rounded-xl">
           <p className="text-slate-500 mb-4">No workflows created yet.</p>
@@ -85,7 +86,7 @@ export default function WorkflowList() {
         </div>
       )}
 
-      {/* Grid Layout */}
+    
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {workflows?.map((wf) => (
           <Card key={wf.id} className="group hover:shadow-lg transition-all duration-300 border-slate-200 flex flex-col">
@@ -105,7 +106,7 @@ export default function WorkflowList() {
                      <Pencil className="w-4 h-4" />
                    </Button>
                    
-                   {/* ALERT DIALOG UNTUK DELETE */}
+                 
                    <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600">

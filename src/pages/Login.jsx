@@ -1,15 +1,18 @@
+import api from '../lib/axios';
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import api from '../lib/axios';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-// Import komponen Alert
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function Login() {
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,7 +45,7 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err) {
       console.error("Login Error:", err);
-      // Set pesan error untuk ditampilkan di Alert
+    
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -51,14 +54,16 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+
       <Card className="w-full max-w-md shadow-lg border-slate-200">
+
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center text-slate-900">Welcome Back</CardTitle>
           <CardDescription className="text-center">Sign in to your AgentOps account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           
-          {/* ALERT SUKSES (Misal setelah register) */}
+        
           {successMsg && (
             <Alert className="border-green-500/50 text-green-600 bg-green-50 [&>svg]:text-green-600">
               <CheckCircle2 className="h-4 w-4" />
@@ -67,7 +72,6 @@ export default function Login() {
             </Alert>
           )}
 
-          {/* ALERT ERROR (Jika login gagal) */}
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -91,6 +95,7 @@ export default function Login() {
             </Button>
           </form>
         </CardContent>
+        
         <CardFooter className="flex justify-center">
           <p className="text-sm text-slate-500">
             Don't have an account? <Link to="/register" className="text-indigo-600 hover:underline font-medium">Sign up</Link>

@@ -1,17 +1,21 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/sonner"; // Import Toaster dari Shadcn
-import DashboardLayout from './layouts/DashboardLayout';
-import LandingPage from './pages/LandingPage';
+
+
 import Login from './pages/Login';
 import Register from './pages/Register';
-import WorkflowBuilder from './pages/WorkflowBuilder';
 import WorkflowRun from './pages/WorkflowRun';
+import LandingPage from './pages/LandingPage';
 import WorkflowList from './pages/WorkflowList';
+import WorkflowBuilder from './pages/WorkflowBuilder';
+import DashboardLayout from './layouts/DashboardLayout';
+
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+import { Toaster } from "@/components/ui/sonner"; 
 
 const queryClient = new QueryClient();
 
-// ... (Kode ProtectedRoute dan PublicRoute TETAP SAMA, tidak perlu diubah)
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token || token === 'undefined' || token === 'null') {
@@ -48,7 +52,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       
-      {/* Komponen TOASTER dipasang disini agar global */}
+      
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );

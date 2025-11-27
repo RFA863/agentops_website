@@ -1,13 +1,17 @@
+import api from '../lib/axios';
+
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import api from '../lib/axios';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+
+import { toast } from "sonner"; 
+
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Import Alert
-import { toast } from "sonner"; // Import Toast
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
 import { Loader2, PlayCircle, Clock, AlertCircle } from "lucide-react";
 
 export default function WorkflowRun() {
@@ -16,7 +20,6 @@ export default function WorkflowRun() {
   const [input, setInput] = useState('');
   const [executionId, setExecutionId] = useState(null);
 
-  // 1. Mutation: Execute Workflow
   const executeMutation = useMutation({
     mutationFn: async () => {
       const res = await api.post(`/workflows/${id}/execute`, { input });
@@ -24,15 +27,15 @@ export default function WorkflowRun() {
     },
     onSuccess: (data) => {
       setExecutionId(data.executionId); 
-      toast.success("Workflow execution started!"); // Toast Sukses
+      toast.success("Workflow execution started!"); 
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || "Failed to start execution."); // Toast Gagal
+      toast.error(err.response?.data?.message || "Failed to start execution."); 
     }
   });
 
-  // 2. Query: Polling History
-  const { data: history, isLoading, isError, error } = useQuery({
+ 
+  const { data: history, isError, error } = useQuery({
     queryKey: ['execution', executionId],
     queryFn: async () => {
       const res = await api.get(`/workflows/executions/${executionId}`);
@@ -42,9 +45,9 @@ export default function WorkflowRun() {
     refetchInterval: (data) => {
       const status = data?.status?.toLowerCase();
       if (status === 'completed' || status === 'failed') {
-        return false; // Stop polling
+        return false;
       }
-      return 1000; // Poll tiap 1 detik
+      return 1000; 
     }
   });
 
@@ -58,7 +61,7 @@ export default function WorkflowRun() {
     }
   };
 
-  // TAMPILKAN ALERT JIKA ERROR LOAD HISTORY (Misal ID eksekusi salah)
+  
   if (isError) return (
     <div className="p-8 max-w-2xl mx-auto">
         <Alert variant="destructive">
@@ -73,7 +76,7 @@ export default function WorkflowRun() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
       
-      {/* Input Section */}
+
       <Card className="border-t-4 border-t-indigo-600 shadow-lg">
         <CardHeader>
           <CardTitle>Run Workflow</CardTitle>
@@ -102,7 +105,7 @@ export default function WorkflowRun() {
         </CardContent>
       </Card>
 
-      {/* Logs / Results Section */}
+      
       {executionId && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -115,7 +118,7 @@ export default function WorkflowRun() {
           </div>
 
           <div className="space-y-4">
-            {/* Input Awal */}
+        
             <Card className="bg-slate-50 border-slate-200 opacity-80">
               <CardHeader className="py-3">
                 <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center">
@@ -127,7 +130,7 @@ export default function WorkflowRun() {
               </CardContent>
             </Card>
 
-            {/* List Steps Logs */}
+            
             {history?.execution_log?.map((log, idx) => (
               <Card key={log.id} className={`transition-all duration-300 ${log.status === 'Running' ? 'ring-2 ring-blue-400 shadow-blue-100' : ''}`}>
                 <CardHeader className="py-4 border-b border-slate-100 bg-white rounded-t-lg flex flex-row items-center justify-between space-y-0">

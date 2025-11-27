@@ -1,34 +1,38 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Play, Save, Trash2, Pencil, X, AlertCircle } from "lucide-react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
-} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, 
+  AlertDialogContent, AlertDialogDescription, 
+  AlertDialogFooter, AlertDialogHeader, 
+  AlertDialogTitle, AlertDialogTrigger
+  } from "@/components/ui/alert-dialog";
+
+import { Loader2, Play, Save, Trash2, Pencil, X, AlertCircle } from "lucide-react";
+
 import { toast } from "sonner";
 
 export default function WorkflowBuilder() {
+
   const navigate = useNavigate();
-  const { id } = useParams(); // Ambil ID jika mode edit
+  const { id } = useParams(); 
   const queryClient = useQueryClient();
   const isEditMode = !!id;
 
   const [workflowId, setWorkflowId] = useState(null);
   const [steps, setSteps] = useState([]);
-  
-  // Form Workflow Header
   const [wfName, setWfName] = useState('');
   const [wfDesc, setWfDesc] = useState('');
-
-  // Form Agent
   const [isEditingAgent, setIsEditingAgent] = useState(false);
   const [editingAgentId, setEditingAgentId] = useState(null);
   const [agentName, setAgentName] = useState('');
@@ -36,11 +40,10 @@ export default function WorkflowBuilder() {
   const [agentModel, setAgentModel] = useState('gemini-2.0-flash-001');
   const [agentTemp, setAgentTemp] = useState(0.7);
 
-  // 1. Fetch Data jika Mode Edit
+ 
   const { data: existingData, isLoading, isError, error } = useQuery({
     queryKey: ['workflow', id],
     queryFn: async () => {
-        // Idealnya ada endpoint GET /workflows/:id. Kita filter dari list sementara.
         const res = await api.get('/workflows'); 
         const found = res.data.data.find(w => w.id === parseInt(id));
         if (!found) throw new Error("Workflow not found");
@@ -50,37 +53,38 @@ export default function WorkflowBuilder() {
     retry: 1
   });
 
-  // Populate Data saat Fetch Selesai
   useEffect(() => {
     if (existingData) {
         setWorkflowId(existingData.id);
         setWfName(existingData.name);
         setWfDesc(existingData.description || '');
-        // Map steps structure
+       
         const loadedSteps = existingData.workflow_step.map(s => ({
-             id: s.id, // ID step
-             agent: s.agent // Data agent
+             id: s.id, 
+             agent: s.agent 
         }));
         setSteps(loadedSteps);
     }
   }, [existingData]);
 
-  // 2. Mutation: Create / Update Workflow Header
+ 
   const saveWorkflowMutation = useMutation({
     mutationFn: async (data) => {
       if (isEditMode) {
-        // Update
+        
         return await api.put(`/workflows/${id}`, data);
+
       } else {
-        // Create
+        
         const res = await api.post('/workflows', data);
-        return res.data.data; // Return created workflow object
+        return res.data.data; 
+
       }
     },
     onSuccess: (data) => {
       if (!isEditMode) {
-          setWorkflowId(data.id); // Set ID baru jika create
-          navigate(`/dashboard/edit/${data.id}`, { replace: true }); // Ubah URL jadi mode edit
+          setWorkflowId(data.id); 
+          navigate(`/dashboard/edit/${data.id}`, { replace: true }); 
       }
       queryClient.invalidateQueries(['workflows']);
       toast.success(isEditMode ? "Workflow updated successfully!" : "Workflow created successfully!");
@@ -90,14 +94,13 @@ export default function WorkflowBuilder() {
     }
   });
 
-  // 3. Mutation: Add Agent
   const addStepMutation = useMutation({
     mutationFn: async (data) => {
       const res = await api.post(`/workflows/${workflowId}/steps`, data);
       return res.data.data;
     },
     onSuccess: (data) => {
-      setSteps([...steps, { id: data.id, agent: data.agent }]); // Update UI local
+      setSteps([...steps, { id: data.id, agent: data.agent }]); 
       resetAgentForm();
       toast.success("New agent added to sequence.");
     },
@@ -106,13 +109,13 @@ export default function WorkflowBuilder() {
     }
   });
 
-  // 4. Mutation: Update Agent (PUT /agents/update/:id)
+
   const updateAgentMutation = useMutation({
     mutationFn: async (data) => {
        await api.put(`/agents/update/${editingAgentId}`, data);
     },
     onSuccess: (data, variables) => {
-       // Update UI local secara manual agar tidak perlu refetch berat
+      
        const updatedSteps = steps.map(s => {
            if (s.agent.id === editingAgentId) {
                return { ...s, agent: { ...s.agent, ...variables } };
@@ -128,13 +131,13 @@ export default function WorkflowBuilder() {
     }
   });
 
-  // 5. Mutation: Delete Agent (DELETE /agents/delete/:id)
+  
   const deleteAgentMutation = useMutation({
       mutationFn: async (agentId) => {
           await api.delete(`/agents/delete/${agentId}`);
       },
       onSuccess: (_, agentId) => {
-          // Hapus dari UI local
+        
           setSteps(steps.filter(s => s.agent.id !== agentId));
           toast.success("Agent removed from sequence.");
       },
@@ -173,8 +176,8 @@ export default function WorkflowBuilder() {
       setAgentModel(agent.model);
       setAgentPrompt(agent.prompt);
       setAgentTemp(agent.Temperature || agent.temperature || 0.7);
-      // Scroll ke form (opsional)
-      // window.scrollTo({ top: 0, behavior: 'smooth' });
+ 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetAgentForm = () => {
@@ -185,7 +188,7 @@ export default function WorkflowBuilder() {
       setAgentTemp(0.7);
   };
 
-  // Loading State untuk Edit Mode
+
   if (isEditMode && isLoading) return (
     <div className="flex flex-col items-center justify-center h-[50vh]">
       <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-4" />
@@ -193,7 +196,7 @@ export default function WorkflowBuilder() {
     </div>
   );
 
-  // Error Alert jika gagal load data
+  
   if (isEditMode && isError) {
       return (
         <div className="p-8 max-w-2xl mx-auto mt-10">
@@ -226,11 +229,11 @@ export default function WorkflowBuilder() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT: Form Input */}
+       
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Header Form */}
           <Card className={workflowId ? "border-green-200 bg-green-50/30" : ""}>
+
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-medium text-white">1</span>
@@ -238,6 +241,7 @@ export default function WorkflowBuilder() {
                 {workflowId && <Badge variant="outline" className="ml-auto text-green-600 border-green-600 bg-white">Saved</Badge>}
               </CardTitle>
             </CardHeader>
+
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Workflow Name</Label>
@@ -257,9 +261,10 @@ export default function WorkflowBuilder() {
                 {isEditMode || workflowId ? "Update Details" : "Save & Continue"}
               </Button>
             </CardContent>
+
           </Card>
 
-          {/* Agent Form */}
+       
           {workflowId && (
             <Card className={`border-2 shadow-sm ${isEditingAgent ? 'border-indigo-400 ring-4 ring-indigo-50' : 'border-indigo-100'}`}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -273,6 +278,7 @@ export default function WorkflowBuilder() {
                     </Button>
                 )}
               </CardHeader>
+
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -291,6 +297,7 @@ export default function WorkflowBuilder() {
                     </select>
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label>System Prompt</Label>
                   <Textarea 
@@ -301,6 +308,7 @@ export default function WorkflowBuilder() {
                   />
                   <p className="text-xs text-slate-500">This prompt defines the agent's persona and task.</p>
                 </div>
+
                 <div className="space-y-3 pt-2">
                    <div className="flex justify-between">
                      <Label>Creativity (Temperature)</Label>
@@ -308,15 +316,15 @@ export default function WorkflowBuilder() {
                    </div>
                    <input 
                      type="range" 
-                     min="0" max="2" step="0.1" 
+                     min="0" max="1" step="0.1" 
                      value={agentTemp} 
                      onChange={(e) => setAgentTemp(e.target.value)} 
                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" 
                    />
                    <div className="flex justify-between text-[10px] text-slate-400 px-1">
                      <span>Precise (0.0)</span>
-                     <span>Balanced (1.0)</span>
-                     <span>Creative (2.0)</span>
+                     <span>Balanced (0.5)</span>
+                     <span>Creative (1.0)</span>
                    </div>
                 </div>
 
@@ -329,17 +337,20 @@ export default function WorkflowBuilder() {
                   {(addStepMutation.isPending || updateAgentMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isEditingAgent ? "Update Agent Configuration" : "Add Agent to Sequence"}
                 </Button>
+
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* RIGHT: Pipeline Preview List */}
+
         <div className="lg:col-span-1">
           <Card className="h-full bg-slate-50 border-l-4 border-l-slate-200 shadow-inner">
+
              <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Pipeline Sequence</CardTitle>
              </CardHeader>
+
              <CardContent className="space-y-0">
                 {steps.length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
@@ -349,14 +360,14 @@ export default function WorkflowBuilder() {
                 ) : (
                     steps.map((step, index) => (
                         <div key={step.agent.id} className="relative pl-6 pb-6 border-l-2 border-slate-300 last:border-0 last:pb-0">
-                            {/* Step Number Node */}
+                        
                             <span className={`absolute -left-[9px] top-0 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ring-4 ring-slate-50 
                                 ${isEditingAgent && editingAgentId === step.agent.id ? 'bg-indigo-600 text-white ring-indigo-100' : 'bg-slate-400 text-white'}
                             `}>
                                 {index + 1}
                             </span>
                             
-                            {/* Agent Card */}
+                         
                             <div className={`p-3 rounded-lg border shadow-sm transition-all duration-200 group
                                 ${isEditingAgent && editingAgentId === step.agent.id ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-200' : 'bg-white border-slate-200 hover:border-indigo-300'}
                             `}>
@@ -373,16 +384,20 @@ export default function WorkflowBuilder() {
                                                 <Trash2 className="w-3 h-3"/>
                                              </Button>
                                           </AlertDialogTrigger>
+
                                           <AlertDialogContent>
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Delete Agent?</AlertDialogTitle>
                                                 <AlertDialogDescription>This will remove {step.agent.name} from the workflow sequence.</AlertDialogDescription>
                                             </AlertDialogHeader>
+
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                 <AlertDialogAction onClick={() => deleteAgentMutation.mutate(step.agent.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                             </AlertDialogFooter>
+
                                           </AlertDialogContent>
+                                          
                                         </AlertDialog>
                                     </div>
                                 </div>
