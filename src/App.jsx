@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/sonner"; // Import Toaster dari Shadcn
 import DashboardLayout from './layouts/DashboardLayout';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -10,17 +11,15 @@ import WorkflowList from './pages/WorkflowList';
 
 const queryClient = new QueryClient();
 
-// Komponen Proteksi Route
+// ... (Kode ProtectedRoute dan PublicRoute TETAP SAMA, tidak perlu diubah)
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  // Cek token valid sederhana
   if (!token || token === 'undefined' || token === 'null') {
     return <Navigate to="/login" replace />;
   }
   return children;
 };
 
-// Komponen Public Route (Redirect ke dashboard jika sudah login)
 const PublicRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (token && token !== 'undefined' && token !== 'null') {
@@ -34,25 +33,23 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-
           
-          
-          {/* Protected Dashboard Routes */}
-         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-          <Route index element={<WorkflowList />} />
-          <Route path="create" element={<WorkflowBuilder />} />
-          <Route path="edit/:id" element={<WorkflowBuilder />} /> {/* Route Baru: Edit menggunakan Builder yang sama */}
-          <Route path="run/:id" element={<WorkflowRun />} />
-        </Route>
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+            <Route index element={<WorkflowList />} />
+            <Route path="create" element={<WorkflowBuilder />} />
+            <Route path="edit/:id" element={<WorkflowBuilder />} />
+            <Route path="run/:id" element={<WorkflowRun />} />
+          </Route>
 
-          {/* Catch all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      
+      {/* Komponen TOASTER dipasang disini agar global */}
+      <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );
 }

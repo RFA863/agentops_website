@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '../lib/axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, PlayCircle, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Import Alert
+import { toast } from "sonner"; // Import Toast
+import { Loader2, PlayCircle, Clock, AlertCircle } from "lucide-react";
 
 export default function WorkflowRun() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [executionId, setExecutionId] = useState(null);
 
@@ -20,42 +23,55 @@ export default function WorkflowRun() {
       return res.data.data;
     },
     onSuccess: (data) => {
-      setExecutionId(data.executionId); // Mulai tracking logs
+      setExecutionId(data.executionId); 
+      toast.success("Workflow execution started!"); // Toast Sukses
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to start execution."); // Toast Gagal
     }
   });
 
-  // 2. Query: Polling History (Real-time update)
-  const { data: history, isLoading } = useQuery({
+  // 2. Query: Polling History
+  const { data: history, isLoading, isError, error } = useQuery({
     queryKey: ['execution', executionId],
     queryFn: async () => {
       const res = await api.get(`/workflows/executions/${executionId}`);
       return res.data.data;
     },
     enabled: !!executionId, 
-   refetchInterval: (query) => {
-      const status = query?.state?.data?.status?.toLowerCase(); // Ambil status dari data query terakhir
-      
-      // Jika status sudah selesai/gagal, STOP polling (return false)
+    refetchInterval: (data) => {
+      const status = data?.status?.toLowerCase();
       if (status === 'completed' || status === 'failed') {
-        return false;
+        return false; // Stop polling
       }
-      
-      // Jika belum selesai, lanjut polling tiap 2 detik
-      return 2000; 
+      return 1000; // Poll tiap 1 detik
     }
   });
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Completed': return 'bg-green-500 hover:bg-green-600';
-      case 'Running': return 'bg-blue-500 hover:bg-blue-600';
-      case 'Failed': return 'bg-red-500 hover:bg-red-600';
+    const s = status?.toLowerCase();
+    switch (s) {
+      case 'completed': return 'bg-green-500 hover:bg-green-600';
+      case 'running': return 'bg-blue-500 hover:bg-blue-600';
+      case 'failed': return 'bg-red-500 hover:bg-red-600';
       default: return 'bg-slate-400';
     }
   };
 
+  // TAMPILKAN ALERT JIKA ERROR LOAD HISTORY (Misal ID eksekusi salah)
+  if (isError) return (
+    <div className="p-8 max-w-2xl mx-auto">
+        <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error?.message || "Failed to load execution logs."}</AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+    </div>
+  );
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
       
       {/* Input Section */}
       <Card className="border-t-4 border-t-indigo-600 shadow-lg">
@@ -92,7 +108,7 @@ export default function WorkflowRun() {
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-slate-800">Execution Logs</h3>
             {history && (
-              <Badge className={`${getStatusColor(history.status)} text-white px-3 py-1`}>
+              <Badge className={`${getStatusColor(history.status)} text-white px-3 py-1 capitalize`}>
                 {history.status}
               </Badge>
             )}

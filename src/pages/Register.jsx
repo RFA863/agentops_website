@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"; // Import Alert
+import { Loader2, AlertCircle } from "lucide-react"; // Import Icon
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -23,7 +24,7 @@ export default function Register() {
       // Call API Register
       await api.post('/auth/register', { username, password });
       
-      // Jika sukses, langsung arahkan ke login
+      // Jika sukses, arahkan ke login dengan state message
       navigate('/login', { state: { message: 'Registration successful! Please login.' } });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Username might be taken.');
@@ -40,6 +41,16 @@ export default function Register() {
           <CardDescription className="text-center">Start building your AI workflows today</CardDescription>
         </CardHeader>
         <CardContent>
+          
+          {/* ERROR ALERT: Tampil jika registrasi gagal */}
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Registration Failed</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -65,7 +76,7 @@ export default function Register() {
               />
               <p className="text-xs text-slate-400">Must be at least 8 characters long</p>
             </div>
-            {error && <p className="text-sm text-red-500 text-center bg-red-50 p-2 rounded border border-red-100">{error}</p>}
+            
             <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating Account...</> : "Sign Up"}
             </Button>

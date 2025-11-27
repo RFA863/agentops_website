@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+// Import komponen Alert
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -31,27 +33,16 @@ export default function Login() {
     
     try {
       const res = await api.post('/auth/login', { username, password });
-      
-      // --- PERBAIKAN DI SINI ---
-      // Backend Anda mengembalikan struktur: { data: { token: { token: "..." } } }
-      // Sebelumnya Anda hanya mengambil res.data.data.token (yang berisi Object), 
-      // sehingga tersimpan sebagai "[object Object]" di LocalStorage.
-      
       const tokenData = res.data?.data?.token; 
       const actualToken = tokenData?.token; 
 
-      if (!actualToken) {
-        throw new Error("Token not found in response");
-      }
+      if (!actualToken) throw new Error("Token not found");
 
-      // Simpan string token yang benar
       localStorage.setItem('token', actualToken);
-      
-      // Redirect ke Dashboard
       navigate('/dashboard');
-      
     } catch (err) {
       console.error("Login Error:", err);
+      // Set pesan error untuk ditampilkan di Alert
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -65,12 +56,26 @@ export default function Login() {
           <CardTitle className="text-2xl font-bold text-center text-slate-900">Welcome Back</CardTitle>
           <CardDescription className="text-center">Sign in to your AgentOps account</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          
+          {/* ALERT SUKSES (Misal setelah register) */}
           {successMsg && (
-            <div className="mb-4 p-3 bg-green-50 text-green-600 text-sm rounded-md text-center border border-green-200">
-              {successMsg}
-            </div>
+            <Alert className="border-green-500/50 text-green-600 bg-green-50 [&>svg]:text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>{successMsg}</AlertDescription>
+            </Alert>
           )}
+
+          {/* ALERT ERROR (Jika login gagal) */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Login Failed</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -80,7 +85,7 @@ export default function Login() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            {error && <p className="text-sm text-red-500 text-center bg-red-50 p-2 rounded border border-red-100">{error}</p>}
+            
             <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={loading}>
               {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Signing in...</> : "Sign In"}
             </Button>
