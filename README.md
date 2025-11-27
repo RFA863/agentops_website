@@ -1,16 +1,80 @@
-# React + Vite
+# AgentOps Dashboard (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The modern, responsive frontend for **AgentOps**, built to manage AI Workflows and monitor executions in real-time.
 
-Currently, two official plugins are available:
+This application provides a clean UI to build workflows, configure AI agents, and visualize the chaining process where the output of one AI becomes the input for the next.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📋 Table of Contents
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+- [Project Structure](#project-structure)
 
-## React Compiler
+## ✨ Features
+- **Interactive Workflow Builder**: Create and edit workflows with an intuitive UI.
+- **Agent Configuration**: Customize AI models, prompts, and creativity (temperature) using sliders and forms.
+- **Real-time Monitoring**: Watch the execution status of each agent step (Pending -> Running -> Completed) via polling.
+- **Responsive Design**: Built with Tailwind CSS for a clean, mobile-friendly look.
+- **Feedback System**: Integrated Toasts and Alerts for better user experience using Shadcn UI.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Tech Stack
+- **Framework**: React.js (Vite)
+- **Styling**: Tailwind CSS
+- **Components**: Shadcn UI (Radix Primitives)
+- **State/Data Fetching**: TanStack Query (React Query)
+- **HTTP Client**: Axios (with Interceptors for JWT)
+- **Routing**: React Router DOM
+- **Icons**: Lucide React
 
-## Expanding the ESLint configuration
+## ✅ Prerequisites
+- Node.js (v18 or later)
+- The **AgentOps Controller** (Backend) must be running on port 3000 (or as configured).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 Installation & Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd agentops_website
+  
+2. **Install the dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+3.  **Create a `.env` file from the example:**
+
+    ```bash
+    cp .env.example .env
+    ```
+
+4.  **Set the API URL in your new `.env` file**:
+
+    ```
+    VITE_API_URL='https://cyberfeed-controller.vercel.app'
+    ```
+
+---
+
+## Available Scripts
+
+* **To run the app in development mode:**
+    Open your browser to `http://localhost:5173`
+
+    ```bash
+    npm run dev
+    ```
+
+* **To build the app for production:**
+
+    ```bash
+    npm run build
+    ```
+
+* **To lint the project files:**
+
+    ```bash
+    npm run lint
+    ```
