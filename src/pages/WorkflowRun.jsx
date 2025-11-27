@@ -31,13 +31,17 @@ export default function WorkflowRun() {
       const res = await api.get(`/workflows/executions/${executionId}`);
       return res.data.data;
     },
-    enabled: !!executionId, // Hanya jalan jika ada executionId
-    refetchInterval: (data) => {
-      // Stop polling jika status sudah selesai
-      if (data?.state?.status === 'Completed' || data?.state?.status === 'Failed') {
+    enabled: !!executionId, 
+   refetchInterval: (query) => {
+      const status = query?.state?.data?.status?.toLowerCase(); // Ambil status dari data query terakhir
+      
+      // Jika status sudah selesai/gagal, STOP polling (return false)
+      if (status === 'completed' || status === 'failed') {
         return false;
       }
-      return 1000; // Poll setiap 1 detik
+      
+      // Jika belum selesai, lanjut polling tiap 2 detik
+      return 2000; 
     }
   });
 

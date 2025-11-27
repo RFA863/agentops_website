@@ -1,16 +1,19 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Tambah useMutation & Client
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/axios';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Play, ArrowRight, Layers, Calendar } from "lucide-react";
+import { 
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
+import { Plus, Play, ArrowRight, Calendar, Pencil, Trash2, Loader2 } from "lucide-react"; // Import icon baru
 
 export default function WorkflowList() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient(); // Untuk refresh data otomatis
 
-  // Fetch Data Workflows
   const { data: workflows, isLoading, isError } = useQuery({
     queryKey: ['workflows'],
     queryFn: async () => {
@@ -19,27 +22,22 @@ export default function WorkflowList() {
     }
   });
 
-  if (isLoading) {
-    return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="h-[200px] flex flex-col justify-between">
-            <CardHeader><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-1/2 mt-2" /></CardHeader>
-            <CardContent><Skeleton className="h-10 w-full" /></CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  // Mutation Delete Workflow
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/workflows/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['workflows']); // Refresh list setelah delete
+    }
+  });
 
-  if (isError) {
-    return <div className="text-center text-red-500 py-10">Failed to load workflows.</div>;
-  }
+  if (isLoading) return <div className="grid gap-6 md:grid-cols-3">{/* Skeleton... */}</div>;
+  if (isError) return <div className="text-red-500">Error loading workflows</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
-      {/* Header Section */}
+      {/* Header sama seperti sebelumnya */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">My Workflows</h2>
@@ -52,23 +50,7 @@ export default function WorkflowList() {
         </Link>
       </div>
 
-      {/* Empty State */}
-      {workflows?.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-300 rounded-xl">
-          <div className="bg-indigo-50 p-4 rounded-full mb-4">
-            <Layers className="w-8 h-8 text-indigo-500" />
-          </div>
-          <h3 className="text-lg font-semibold text-slate-900">No workflows yet</h3>
-          <p className="text-slate-500 max-w-sm text-center mt-2 mb-6">
-            Start by creating your first sequence of AI agents to automate your tasks.
-          </p>
-          <Link to="/dashboard/create">
-            <Button variant="outline">Create Workflow</Button>
-          </Link>
-        </div>
-      )}
-
-      {/* Grid Layout */}
+      {/* List Workflows */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {workflows?.map((wf) => (
           <Card key={wf.id} className="group hover:shadow-lg transition-all duration-300 border-slate-200 flex flex-col">
@@ -83,18 +65,44 @@ export default function WorkflowList() {
                     {new Date(wf.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <Badge variant="secondary" className="bg-slate-100 text-slate-600">
-                  {wf.workflow_step?.length || 0} Steps
-                </Badge>
+                <div className="flex gap-2">
+                   {/* Tombol Edit */}
+                   <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => navigate(`/dashboard/edit/${wf.id}`)}>
+                     <Pencil className="w-4 h-4" />
+                   </Button>
+                   
+                   {/* Tombol Delete dengan Konfirmasi */}
+                   <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600">
+                          {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin"/> : <Trash2 className="w-4 h-4" />}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the workflow "{wf.name}" and all its agents.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteMutation.mutate(wf.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                   </AlertDialog>
+                </div>
               </div>
               <CardDescription className="line-clamp-2 min-h-[40px]">
                 {wf.description || "No description provided."}
               </CardDescription>
             </CardHeader>
 
+            {/* Content Pipeline Visualization (Sama seperti sebelumnya) */}
             <CardContent className="flex-1">
-              {/* Visualisasi Step/Chain */}
-              <div className="mt-2 space-y-3">
+               <div className="mt-2 space-y-3">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pipeline Sequence</p>
                 <div className="flex flex-wrap items-center gap-2">
                   {wf.workflow_step?.map((step, idx) => (
@@ -103,27 +111,19 @@ export default function WorkflowList() {
                         <span className="w-4 h-4 flex items-center justify-center bg-indigo-100 text-indigo-700 rounded-full text-[10px] flex-shrink-0">
                           {idx + 1}
                         </span>
-                        <span className="truncate" title={step.agent.name}>{step.agent.name}</span>
+                        <span className="truncate">{step.agent.name}</span>
                       </div>
-                      {/* Panah antar agent */}
                       {idx < wf.workflow_step.length - 1 && (
                         <ArrowRight className="w-3 h-3 text-slate-300 mx-1 flex-shrink-0" />
                       )}
                     </div>
                   ))}
-                  
-                  {(!wf.workflow_step || wf.workflow_step.length === 0) && (
-                    <span className="text-xs text-slate-400 italic">No agents configured</span>
-                  )}
                 </div>
               </div>
             </CardContent>
 
             <CardFooter className="pt-4 border-t border-slate-100">
-              <Button 
-                className="w-full bg-slate-900 hover:bg-indigo-600 transition-colors" 
-                onClick={() => navigate(`/dashboard/run/${wf.id}`)}
-              >
+              <Button className="w-full bg-slate-900 hover:bg-indigo-600 transition-colors" onClick={() => navigate(`/dashboard/run/${wf.id}`)}>
                 <Play className="w-4 h-4 mr-2" /> Run Workflow
               </Button>
             </CardFooter>

@@ -43,12 +43,10 @@ function App() {
           
           {/* Protected Dashboard Routes */}
          <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-            {/* GANTI INI: Jangan redirect ke create lagi */}
-            <Route index element={<WorkflowList />} /> 
-            
-            {/* Route lainnya tetap sama */}
-            <Route path="create" element={<WorkflowBuilder />} />
-            <Route path="run/:id" element={<WorkflowRun />} />
+          <Route index element={<WorkflowList />} />
+          <Route path="create" element={<WorkflowBuilder />} />
+          <Route path="edit/:id" element={<WorkflowBuilder />} /> {/* Route Baru: Edit menggunakan Builder yang sama */}
+          <Route path="run/:id" element={<WorkflowRun />} />
         </Route>
 
           {/* Catch all redirect */}
