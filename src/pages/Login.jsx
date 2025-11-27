@@ -32,15 +32,20 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', { username, password });
       
-      // DEBUG: Pastikan token ada di response
-      const token = res.data?.data?.token;
+      // --- PERBAIKAN DI SINI ---
+      // Backend Anda mengembalikan struktur: { data: { token: { token: "..." } } }
+      // Sebelumnya Anda hanya mengambil res.data.data.token (yang berisi Object), 
+      // sehingga tersimpan sebagai "[object Object]" di LocalStorage.
       
-      if (!token) {
-        throw new Error("Invalid response from server (No Token)");
+      const tokenData = res.data?.data?.token; 
+      const actualToken = tokenData?.token; 
+
+      if (!actualToken) {
+        throw new Error("Token not found in response");
       }
 
-      // Simpan token
-      localStorage.setItem('token', token);
+      // Simpan string token yang benar
+      localStorage.setItem('token', actualToken);
       
       // Redirect ke Dashboard
       navigate('/dashboard');

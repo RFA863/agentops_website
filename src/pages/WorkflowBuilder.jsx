@@ -54,6 +54,12 @@ export default function WorkflowBuilder() {
   });
 
   const handleCreateWorkflow = () => {
+    // 1. VALIDASI: Jangan kirim request jika nama kosong
+    if (!wfName || wfName.trim() === "") {
+      alert("Workflow name cannot be empty!"); // Atau gunakan Toast error jika ada
+      return; 
+    }
+
     createWorkflowMutation.mutate({ name: wfName, description: wfDesc });
   };
 
